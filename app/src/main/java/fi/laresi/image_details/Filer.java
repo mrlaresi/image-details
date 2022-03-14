@@ -1,6 +1,7 @@
-package image_details;
+package fi.laresi.image_details;
 import java.io.IOError;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -40,5 +41,37 @@ public class Filer {
 		}
 
 		byteChannel = Files.newByteChannel(filepath);
+	}
+
+
+	/**
+	 * Closes the opened file
+	 * @throws IOException
+	 */
+	public void closeFile() throws IOException {
+		byteChannel.close();
+	}
+
+	/**
+	 * Reads given amount of bytes from the bytechannel and returns the result
+	 * of the read operation
+	 * @see #ByteResult
+	 * @param byteCount how many bytes will be read
+	 * @return containing results of the read operation
+	 * @throws IOException if an error happens
+	 */
+	public ByteResult readBytes(int byteCount) throws IOException {
+		ByteBuffer buffer = ByteBuffer.allocate(byteCount);
+		int read = byteChannel.read(buffer);
+		return new ByteResult(read, buffer);
+	}
+
+	/**
+	 * Moves the bytechannel cursor forwards
+	 * @param byteCount how many bytes the cursor is moved
+	 * @throws IOException if an error happens
+	 */
+	public void skipBytes(int byteCount) throws IOException{
+		byteChannel.position(byteChannel.position() + byteCount);
 	}
 }
