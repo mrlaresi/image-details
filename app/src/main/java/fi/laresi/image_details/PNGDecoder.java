@@ -3,12 +3,14 @@ package fi.laresi.image_details;
 import static fi.laresi.image_details.Constants.PNG_HEADER;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class PNGDecoder {
-	private int chunkCount;
-	private boolean eofFound;
+	private boolean eofChunkFound;
+	private boolean headerChunkFound;
 	private Filer fileReader = new Filer();
+	private ArrayList<Chunk> chunks = new ArrayList<>();
 
 	/**
 	 * Default constructor
@@ -29,6 +31,9 @@ public class PNGDecoder {
 	}
 	private void badFilepath(IOException previous) throws IllegalArgumentException {
 		throw new IllegalArgumentException("Given filepath didn't point to a PNG image.", previous);
+	}
+	private void badFile(String str) throws IllegalArgumentException {
+		throw new IllegalArgumentException(str);
 	}
 
 
@@ -66,44 +71,64 @@ public class PNGDecoder {
 
 	/**
 	 * Reads next chunk from PNG image
+	 * length 4bytes | type 4bytes | data xbytes
 	 * @throws IOException on error
 	 */
-	private void readNextChunk() throws IOException {
+	private Chunk readNextChunk() throws IOException {
 		ByteResult chunkLength = fileReader.readBytes(4);
 		ByteResult chunkType = fileReader.readBytes(4);
 		if (chunkType.getReadCount() < 0) {
-			throw new IOException("End of file was reached before end header was found, image file is invalid.");
+			badFile("End of file was reached before end header was found, image file is invalid.");
 		}
+		
 		int length = chunkLength.getReadBytes().getInt(0);
-		fileReader.skipBytes(length + 4);
+		ByteResult chunkData = fileReader.readBytes(length);
 
-		String type = new String(chunkType.getReadBytes().array());
-		System.out.println(type);
-		if (type.equals("IEND")) {
-			eofFound = true;
-		}
+		// Skip CRC Validation bytes !!!
+		fileReader.skipBytes(4);
 
+		Chunk newChunk = new Chunk(
+			chunkLength.getReadBytes(),
+			chunkType.getReadBytes(),
+			chunkData.getReadBytes()
+		);
+		
+		if (newChunk.isHeader()) headerChunkFound = true;
+		else if (newChunk.isEnd()) eofChunkFound = true;
+		return newChunk;
 	}
 
 	/**
 	 * Read chunks from a PNG file as specified in RFC 2083
-	 * 
 	 * @param filer to read bytes from a file
 	 * @return amount of chunks the file contains
 	 */
-	public int readChunks() {
+	public int readChunks() throws IllegalArgumentException {
 		try {
-			eofFound = false;
-			while (!eofFound) {
-				readNextChunk();
-				chunkCount++;
+			eofChunkFound = false;
+			chunks.add(readNextChunk());
+			
+			if (!headerChunkFound) {
+				badFile("Header chunk wasn't the first chunk found. Image file is invalid.");
+			}
+			while (!eofChunkFound) {
+				chunks.add(readNextChunk());
 			}
 			
 			fileReader.closeFile();
-			return chunkCount;
+			return chunks.size();
 		} catch (IOException io) {
 			System.out.println(io.getMessage());
 			return -1;
 		}
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		for (Chunk chunk : chunks) {
+			sb.append(chunk.toString() + "\n");
+		}
+		return sb.toString();
 	}
 }

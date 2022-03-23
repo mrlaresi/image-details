@@ -5,12 +5,21 @@ package fi.laresi.image_details;
 
 
 public class Main {
+    private static PNGDecoder decoder = new PNGDecoder();
+    private static int foundChunks;
+
+    private static void printDetails() {
+        System.out.println("Found " + foundChunks + " chunks of data in the image:");
+        System.out.println(decoder.toString());
+    }
+
 
     public static void main(String[] args) {
-        PNGDecoder dec = new PNGDecoder();
         try {
-            dec.loadFile(args[0]);
-            dec.readChunks();
+            decoder.loadFile(args[0]);
+            foundChunks = decoder.readChunks();
+
+            printDetails();
         } catch (ArrayIndexOutOfBoundsException oob) {
             System.out.println("Program requires that atleast one filepath as an argument to be given");
             System.exit(1);
