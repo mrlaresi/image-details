@@ -10,7 +10,7 @@ public class Main {
 
     private static void printDetails() {
         System.out.println("Found " + foundChunks + " chunks of data in the image:");
-        System.out.println(decoder.toString());
+        System.out.println(decoder);
     }
 
 

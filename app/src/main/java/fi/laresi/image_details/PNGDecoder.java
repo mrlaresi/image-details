@@ -27,12 +27,15 @@ public class PNGDecoder {
 	}
 
 	private void badFilepath() throws IllegalArgumentException {
+		fileReader.closeFile();
 		throw new IllegalArgumentException("Given filepath didn't point to a PNG image.");
 	}
 	private void badFilepath(IOException previous) throws IllegalArgumentException {
+		fileReader.closeFile();
 		throw new IllegalArgumentException("Given filepath didn't point to a PNG image.", previous);
 	}
 	private void badFile(String str) throws IllegalArgumentException {
+		fileReader.closeFile();
 		throw new IllegalArgumentException(str);
 	}
 
@@ -119,6 +122,7 @@ public class PNGDecoder {
 			return chunks.size();
 		} catch (IOException io) {
 			System.out.println(io.getMessage());
+			fileReader.closeFile();
 			return -1;
 		}
 	}
@@ -127,7 +131,7 @@ public class PNGDecoder {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		for (Chunk chunk : chunks) {
-			sb.append(chunk.toString() + "\n");
+			sb.append(chunk + "\n");
 		}
 		return sb.toString();
 	}

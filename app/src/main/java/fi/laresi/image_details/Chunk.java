@@ -18,6 +18,8 @@ public class Chunk {
 	private final String typeString;
 	private final boolean isHeaderChunk;
 	private final boolean isEndChunk;
+	private final boolean isCritical;
+	private final boolean isProprietary;
 
 	/**
 	 * Constructor for Chunk object where
@@ -32,6 +34,24 @@ public class Chunk {
 		this.typeString = new String(type.array(), StandardCharsets.UTF_8);
 		this.isHeaderChunk = Arrays.equals(type.array(), IHDR);
 		this.isEndChunk = Arrays.equals(type.array(), IEND);
+
+		byte[] array = type.array();
+		// Critical chunk has 5th bit 0
+		this.isCritical = !checkFifthBit(array[0]);
+		// Private chunk has 5th bit on
+		this.isProprietary = checkFifthBit(array[1]);
+	}
+
+
+	/**
+	 * As told in RFC 2083, fifth bit of a byte tells what the chunk is
+	 * Checks if fifth bit is 1
+	 * @return true if fifth bit is on
+	 */
+	private boolean checkFifthBit(byte byteToCheck) {
+		int asd = byteToCheck & 32;
+		if (asd == 32) return true;
+		return false;
 	}
 
 	/**
@@ -52,6 +72,10 @@ public class Chunk {
 
 	@Override
 	public String toString() {
-		return typeString;
+		StringBuilder sb = new StringBuilder();
+		sb.append(typeString);
+		if (isCritical) sb.append(", Critical");
+		if (isProprietary) sb.append(", Not part of the standard");
+		return sb.toString();
 	}
 }

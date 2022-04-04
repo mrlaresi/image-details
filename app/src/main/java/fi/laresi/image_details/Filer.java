@@ -46,10 +46,13 @@ public class Filer {
 
 	/**
 	 * Closes the opened file
-	 * @throws IOException
 	 */
-	public void closeFile() throws IOException {
-		byteChannel.close();
+	public void closeFile() {
+		try {
+			byteChannel.close();
+		} catch (IOException io) {
+			return;
+		}
 	}
 
 	/**
